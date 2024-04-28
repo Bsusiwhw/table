@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Table</title>
+</head>
+<body>
+    <h1>Edit Table</h1>
+    <form id="editForm">
+        <label for="available">Available:</label>
+        <input type="text" id="available" name="available" required>
+        <label for="scheduledStartDate">Scheduled Start Date:</label>
+        <input type="date" id="scheduledStartDate" name="scheduledStartDate" required>
+        <label for="registerUntil">Register Until:</label>
+        <input type="date" id="registerUntil" name="registerUntil" required>
+        <label for="registrationForm">Registration Form:</label>
+        <input type="text" id="registrationForm" name="registrationForm" required>
+        <button type="submit">Add Row</button>
+    </form>
+
+    <h1>Table Display</h1>
+    <table id="dataTable" border="1">
+        <thead>
+            <tr>
+                <th>Available</th>
+                <th>Scheduled Start Date</th>
+                <th>Register Until</th>
+                <th>Registration Form</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Table content will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch data from localStorage and display in the table
+        let tableData = JSON.parse(localStorage.getItem('tableData')) || [];
+        const tableBody = document.querySelector('#dataTable tbody');
+
+        function displayTableData() {
+            tableBody.innerHTML = ''; // Clear existing table rows
+
+            tableData.forEach((data, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${data.available}</td>
+                    <td>${data.scheduledStartDate}</td>
+                    <td>${data.registerUntil}</td>
+                    <td>${data.registrationForm}</td>
+                    <td>
+                        <button onclick="editRow(${index})">Edit</button>
+                        <button onclick="confirmRemove(${index})">Remove</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function removeRow(index) {
+            tableData.splice(index, 1);
+            localStorage.setItem('tableData', JSON.stringify(tableData));
+            displayTableData();
+        }
+
+        function editRow(index) {
+            const rowData = tableData[index];
+            availableInput.value = rowData.available;
+            scheduledStartDateInput.value = rowData.scheduledStartDate;
+            registerUntilInput.value = rowData.registerUntil;
+            registrationFormInput.value = rowData.registrationForm;
+            // Store the index of the row being edited
+            localStorage.setItem('editRowIndex', index);
+        }
+
+        function confirmRemove(index) {
+            if (confirm('Are you sure you want to remove this row?')) {
+                removeRow(index);
+            }
+        }
+
+        displayTableData();
+
+        const editForm = document.getElementById('editForm');
+        const availableInput = document.getElementById('available');
+        const scheduledStartDateInput = document.getElementById('scheduledStartDate');
+        const registerUntilInput = document.getElementById('registerUntil');
+        const registrationFormInput = document.getElementById('registrationForm');
+
+        editForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const available = availableInput.value.trim();
+            const scheduledStartDate = scheduledStartDateInput.value;
+            const registerUntil = registerUntilInput.value;
+            const registrationForm = registrationFormInput.value.trim();
+
+            if (available !== '' && scheduledStartDate !== '' && registerUntil !== '' && registrationForm !== '') {
+                const editRowIndex = localStorage.getItem('editRowIndex');
+                if (editRowIndex !== null) {
+                    // If editing an existing row, update the data at the specified index
+                    tableData[editRowIndex] = { available, scheduledStartDate, registerUntil, registrationForm };
+                    localStorage.removeItem('editRowIndex'); // Remove the editRowIndex from localStorage
+                } else {
+                    // If adding a new row, push the new data to the tableData array
+                    tableData.push({ available, scheduledStartDate, registerUntil, registrationForm });
+                }
+                localStorage.setItem('tableData', JSON.stringify(tableData));
+                alert('Row updated successfully!');
+                displayTableData(); // Refresh the table display
+                editForm.reset(); // Clear form inputs
+            } else {
+                alert('Please fill in all fields!');
+            }
+        });
+    </script>
+</body>
+</html>
